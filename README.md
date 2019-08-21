@@ -1,1 +1,5 @@
-SOExplorer
+# SOExplorer
+
+'''
+make run
+'''
