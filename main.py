@@ -1,37 +1,52 @@
 import os
 import sys
 import datetime
-from gi.repository import Gio
 
 def frmt(name, size):
 	name_size = len(name)
-	if name_size > size:
-		return " " + name[:size-3]+"..."
-	else:
-		return " " + name + (size-name_size)*" "
+	return " " + name[:size-3]+"..." if name_size > size else " " + name + (size-name_size)*" "
 
-def get_files_references(path, contents):
-	absolute_paths = map(lambda x: os.path.join(os.path.abspath(path), x), contents)
-	return filter(lambda y: os.path.isfile, absolute_paths)
-		
+def print_curr_path_contents(files, directories, path):
+	print("|        Nome        | Propritetario | Tamanho | Data de Criação | Data de Alteração |     Aplicação")
+	
+	for f in files:
+		try:
+			s = os.stat(os.path.join(path, f))
+			print(frmt(f, 20), frmt(str(s.st_uid), 15), frmt(str(s.st_size), 9), frmt(datetime.datetime.fromtimestamp(s.st_ctime).strftime("%d/%m/%Y"), 17), frmt(datetime.datetime.fromtimestamp(s.st_mtime).strftime("%d/%m/%Y"), 18))
+		except FileNotFoundError as e:
+			print(e)
+	for d in directories:
+		print(d + " (DIR)")
+
+def generate_contents_from_path(path):
+	path_contents = os.listdir(path)
+	join_path = lambda abs_path, content: os.path.join(os.path.abspath(abs_path), content)
+	files = []
+	directories = []
+	for content in path_contents:
+		joined_path = join_path(path, content)
+		if os.path.isfile(joined_path):
+			files.append(content)
+		else:
+			directories.append(content)
+
+	print_curr_path_contents(files, directories, path)
+
+	while(True):
+		user_input = input("Digite 'nome do diretorio' para acessar o diretorio, ou digite '..' se deseja retornar: ")
+		if user_input == "Q":
+			return
+		if user_input == "..":
+			return generate_contents_from_path(join_path(path, ".."))
+		if user_input not in directories:
+			print("Não existe esse diretório!")
+			continue
+		break
+
+	return generate_contents_from_path(join_path(path, user_input))
+	
+
 if __name__ == "__main__":
 	path = sys.argv[1]
-	path_contents = os.listdir(path)
-	files = get_files_references(path, path_contents)
-
-	print("|        Nome        | Propritetario | Tamanho | Data de Criação | Data de Alteração |     Aplicação")
-
-	for f in files:
-		s = os.stat(f)
-		
-		t = Gio.content_type_guess(f)
-		if t.result_uncertain == False:
-			appi = Gio.app_info_get_all_for_type(t[0])
-			app = appi[0].get_name()
-		else:
-			app = "None"
-
-		print(frmt(f.split("/")[-1], 20), frmt(str(s.st_uid), 15), frmt(str(s.st_size), 9), frmt(datetime.datetime.fromtimestamp(s.st_ctime).strftime("%d/%m/%Y"), 17), frmt(datetime.datetime.fromtimestamp(s.st_mtime).strftime("%d/%m/%Y"), 18), frmt(app,20))
-		
-		
-		
+	generate_contents_from_path(path)
+	print("END")
