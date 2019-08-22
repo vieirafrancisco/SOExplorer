@@ -70,6 +70,9 @@ def generate_contents_from_path(path):
 	
 
 if __name__ == "__main__":
-	path = sys.argv[1]
+	if len(sys.argv) == 1:
+		path = "."
+	else:
+		path = sys.argv[1]
 	generate_contents_from_path(path)
 	print("END")
