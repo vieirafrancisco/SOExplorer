@@ -56,7 +56,7 @@ def generate_contents_from_path(path):
 	print_curr_path_contents(files, directories, path)
 
 	while(True):
-		user_input = input("Digite 'nome do diretorio' para acessar o diretorio, ou digite '..' se deseja retornar: ")
+		user_input = input("Digite 'nome do diretorio' para acessar o diretorio, ou digite '..' se deseja retornar ('Q' para fechar): ")
 		if user_input == "Q":
 			return
 		if user_input == "..":
