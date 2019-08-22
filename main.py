@@ -1,6 +1,23 @@
 import os
 import sys
+import platform
 import datetime
+
+try:
+	import shlex
+	import winreg
+except Exception as e:
+	pass
+
+
+def get_windows_application(extension):
+	try:
+		class_root = winreg.QueryValue(winreg.HKEY_CLASSES_ROOT, extension)
+		with winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, r'{}\shell\open\command'.format(class_root)) as key:
+			command = winreg.QueryValueEx(key, '')[0]
+			return shlex.split(command)[0]
+	except Exception as e:
+		return "None"
 
 def frmt(name, size):
 	name_size = len(name)
@@ -10,9 +27,15 @@ def print_curr_path_contents(files, directories, path):
 	print("|        Nome        | Propritetario | Tamanho | Data de Criação | Data de Alteração |     Aplicação")
 	
 	for f in files:
+
+		if platform.system() == "Windows":
+			app = get_windows_application(os.path.splitext(f)[-1])
+		else:
+			app = "None"
+
 		try:
 			s = os.stat(os.path.join(path, f))
-			print(frmt(f, 20), frmt(str(s.st_uid), 15), frmt(str(s.st_size), 9), frmt(datetime.datetime.fromtimestamp(s.st_ctime).strftime("%d/%m/%Y"), 17), frmt(datetime.datetime.fromtimestamp(s.st_mtime).strftime("%d/%m/%Y"), 18))
+			print(frmt(f, 20), frmt(str(s.st_uid), 15), frmt(str(s.st_size), 9), frmt(datetime.datetime.fromtimestamp(s.st_ctime).strftime("%d/%m/%Y"), 17), frmt(datetime.datetime.fromtimestamp(s.st_mtime).strftime("%d/%m/%Y"), 18), frmt(app, 30))
 		except FileNotFoundError as e:
 			print(e)
 	for d in directories:
